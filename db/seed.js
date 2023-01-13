@@ -1,22 +1,23 @@
 // grab our client with destructuring from the export in index.js
 const { client,
     getAllUsers,
-    createUser
+    createUser,
+    updateUser
 } = require('./index');
 
 
 async function createInitialUsers() {
     try {
-        const albertTwo = await createUser({ username: 'albert', password: 'imposter_albert' });
+        // const albertTwo = await createUser({ username: 'albert', password: 'imposter_albert', name: 'Albert', location:'Chicago' });
         console.log("Starting to create users...");
 
-        const albert = await createUser({ username: 'albert', password: 'bertie99' });
+        const albert = await createUser({ username: 'albert', password: 'bertie99', name: 'Albert Michaels', location: 'Chicago' });
         console.log(albert);
 
-        const sandra = await createUser({ username: 'sandra', password: '2sandy4me' });
+        const sandra = await createUser({ username: 'sandra', password: '2sandy4me', name: 'Sandra Johnson', location: 'Madison' });
         console.log(sandra);
 
-        const glamgal = await createUser({ username: 'glamgal', password: 'soglam' });
+        const glamgal = await createUser({ username: 'glamgal', password: 'soglam', name: 'Glam Glamington', location: 'Glamsville' });
         console.log(glamgal);
 
         console.log("Finished creating users!");
@@ -50,7 +51,10 @@ async function createTables() {
       CREATE TABLE users (
         id SERIAL PRIMARY KEY,
         username varchar(255) UNIQUE NOT NULL,
-        password varchar(255) NOT NULL
+        password varchar(255) NOT NULL,
+        name varchar(225) NOT NULL,
+        location varchar(225) NOT NULL,
+        active BOOLEAN DEFAULT true
       );
     `);
 
@@ -77,8 +81,18 @@ async function testDB() {
     try {
         console.log("Starting to test database...");
 
+        console.log("Calling getAllUsers")
+
         const users = await getAllUsers();
-        console.log("getAllUsers:", users);
+        console.log("Result:", users);
+
+        console.log("Calling updateUser on users[0]")
+
+        const updateUserResult = await updateUser(users[0].id, {
+            name: "Newname Sogood",
+            location: "Lesterville, KY"
+        });
+        console.log("Result:", updateUserResult);
 
         console.log("Finished database tests!");
     } catch (error) {
