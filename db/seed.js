@@ -1,61 +1,43 @@
 // grab our client with destructuring from the export in index.js
-const { client,
-    getAllUsers,
-    getAllPosts,
-    getPostsByUser,
-    getUserById,
-    createUser,
-    createPost,
-    updateUser,
-    updatePost
+const {
+  client,
+  createUser,
+  updateUser,
+  getAllUsers,
+  getUserById,
+  createPost,
+  updatePost,
+  getAllPosts,
+  getPostsByUser,
+  createTags,
+  createPostTag,
+  addTagsToPost,
+  getPostById
 } = require('./index');
 
-
-async function createInitialUsers() {
-    try {
-        // const albertTwo = await createUser({ username: 'albert', password: 'imposter_albert', name: 'Albert', location:'Chicago' });
-        console.log("Starting to create users...");
-
-        const albert = await createUser({ username: 'albert', password: 'bertie99', name: 'Albert Michaels', location: 'Chicago' });
-        console.log(albert);
-
-        const sandra = await createUser({ username: 'sandra', password: '2sandy4me', name: 'Sandra Johnson', location: 'Madison' });
-        console.log(sandra);
-
-        const glamgal = await createUser({ username: 'glamgal', password: 'soglam', name: 'Glam Glamington', location: 'Glamsville' });
-        console.log(glamgal);
-
-        console.log("Finished creating users!");
-    } catch (error) {
-        console.error("Error creating users!");
-        throw error;
-    }
-}
-
-
 async function dropTables() {
-    try {
-        console.log("Starting to drop tables...");
+  try {
+    console.log("Starting to drop tables...");
 
-        await client.query(`
-        DROP TABLE IF EXISTS post_tags;
-        DROP TABLE IF EXISTS tags;
-        DROP TABLE IF EXISTS posts;
-        DROP TABLE IF EXISTS users;
-      `);
+    await client.query(`
+    DROP TABLE IF EXISTS post_tags;
+    DROP TABLE IF EXISTS tags;
+    DROP TABLE IF EXISTS posts;
+    DROP TABLE IF EXISTS users;
+  `);
 
-        console.log("Finished dropping tables!");
-    } catch (error) {
-        console.error("Error dropping tables!");
-        throw error;
-    }
+    console.log("Finished dropping tables!");
+  } catch (error) {
+    console.error("Error dropping tables!");
+    throw error;
+  }
 }
 
 async function createTables() {
-    try {
-        console.log("Starting to build tables...");
+  try {
+    console.log("Starting to build tables...");
 
-        await client.query(`
+    await client.query(`
         CREATE TABLE users (
           id SERIAL PRIMARY KEY,
           username varchar(255) UNIQUE NOT NULL,
@@ -72,132 +54,161 @@ async function createTables() {
           active BOOLEAN DEFAULT true
         );
         CREATE TABLE tags (
-            id, SERIAL PRIMARY KEY,
-            name, VARCHAR(255) UNIQUE NOT NULL
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) UNIQUE NOT NULL
         );
         CREATE TABLE post_tags(
-            "postId", INTEGER REFERENCES posts(id),
-            "tagId", INTEGER REFERENCES tags(id),
-             Add a UNIQUE constraint on ("postId", "tagId")
+          "postId" INTEGER REFERENCES posts(id) UNIQUE NOT NULL,
+          "tagId" INTEGER REFERENCES tags(id) UNIQUE NOT NULL
         );
+
       `);
 
-        console.log("Finished building tables!");
-    } catch (error) {
-        console.error("Error building tables!");
-        throw error;
-    }
+    console.log("Finished building tables!");
+  } catch (error) {
+    console.error("Error building tables!");
+    throw error;
+  }
 }
 
-async function rebuildDB() {
-    try {
-        client.connect();
+async function createInitialUsers() {
+  try {
+    console.log("Starting to create users...");
 
-        await dropTables();
-        await createTables();
-        await createInitialUsers();
-        await createInitialPosts();
-        await createPostTag(); 
-        await addTagsToPost(); 
-    } catch (error) {
-        console.log("Error during rebuildDB")
-        throw error;
-    }
-}
+    await createUser({
+      username: 'albert',
+      password: 'bertie99',
+      name: 'Al Bert',
+      location: 'Sidney, Australia'
+    });
+    await createUser({
+      username: 'sandra',
+      password: '2sandy4me',
+      name: 'Just Sandra',
+      location: 'Ain\'t tellin\''
+    });
+    await createUser({
+      username: 'glamgal',
+      password: 'soglam',
+      name: 'Joshua',
+      location: 'Upper East Side'
+    });
 
-async function testDB() {
-    try {
-        console.log("Starting to test database...");
-
-        console.log("Calling getAllUsers");
-        const users = await getAllUsers();
-        console.log("Result:", users);
-
-        console.log("Calling updateUser on users[0]");
-        const updateUserResult = await updateUser(users[0].id, {
-            name: "Newname Sogood",
-            location: "Lesterville, KY"
-        });
-        console.log("Result:", updateUserResult);
-
-        console.log("Calling getAllPosts");
-        const posts = await getAllPosts();
-        console.log("Result:", posts);
-
-        console.log("Calling updatePost on posts[0]");
-        const updatePostResult = await updatePost(posts[0].id, {
-            title: "New Title",
-            content: "Updated Content"
-        });
-        console.log("Result:", updatePostResult);
-
-        console.log("Calling getUserById with 1");
-        const albert = await getUserById(1);
-        console.log("Result:", albert);
-
-        console.log("Finished database tests!");
-    } catch (error) {
-        console.log("Error during testDB");
-        throw error;
-    }
+    console.log("Finished creating users!");
+  } catch (error) {
+    console.error("Error creating users!");
+    throw error;
+  }
 }
 
 async function createInitialPosts() {
-    try {
-        const [albert, sandra, glamgal] = await getAllUsers();
+  try {
+    const [albert, sandra, glamgal] = await getAllUsers();
 
-        console.log("Starting to create posts...");
-        await createPost({
-            authorId: albert.id,
-            title: "First Post",
-            content: "This is my first post. I hope I love writing blogs as much as I love writing them."
-        });
+    console.log("Starting to create posts...");
+    await createPost({
+      authorId: albert.id,
+      title: "First Post",
+      content: "This is my first post. I hope I love writing blogs as much as I love writing them."
+    });
 
-        await createPost({
-            authorId: sandra.id,
-            title: "How does this work?",
-            content: "Seriously, does this even do anything?"
-        });
+    await createPost({
+      authorId: sandra.id,
+      title: "How does this work?",
+      content: "Seriously, does this even do anything?"
+    });
 
-        await createPost({
-            authorId: glamgal.id,
-            title: "Living the Glam Life",
-            content: "Do you even? I swear that half of you are posing."
-        });
-        console.log("Finished creating posts!");
-    } catch (error) {
-        console.log("Error creating posts!");
-        throw error;
-    }
+    await createPost({
+      authorId: glamgal.id,
+      title: "Living the Glam Life",
+      content: "Do you even? I swear that half of you are posing."
+    });
+    console.log("Finished creating posts!");
+  } catch (error) {
+    console.log("Error creating posts!");
+    throw error;
+  }
 }
 
-async function createPostTag(postId, tagId) {
-    try {
-      await client.query(`
-        INSERT INTO post_tags("postId", "tagId")
-        VALUES ($1, $2)
-        ON CONFLICT ("postId", "tagId") DO NOTHING;
-      `, [postId, tagId]);
-    } catch (error) {
-      throw error;
-    }
-  }
+async function createInitialTags() {
+  try {
+    console.log("Starting to create tags...");
 
-  async function addTagsToPost(postId, tagList) {
-    try {
-      const createPostTagPromises = tagList.map(
-        tag => createPostTag(postId, tag.id)
-      );
-  
-      await Promise.all(createPostTagPromises);
-  
-      return await getPostById(postId);
-    } catch (error) {
-      throw error;
-    }
+    const [happy, sad, inspo, catman] = await createTags([
+      '#happy', 
+      '#worst-day-ever', 
+      '#youcandoanything',
+      '#catmandoeverything'
+    ]);
+
+    const [postOne, postTwo, postThree] = await getAllPosts();
+
+    await addTagsToPost(postOne.id, [happy, inspo]);
+    await addTagsToPost(postTwo.id, [sad, inspo]);
+    await addTagsToPost(postThree.id, [happy, catman, inspo]);
+
+    console.log("Finished creating tags!");
+  } catch (error) {
+    console.log("Error creating tags!");
+    throw error;
   }
+}
+
+async function rebuildDB() {
+  try {
+    client.connect();
+
+    await dropTables();
+    await createTables();
+    await createInitialUsers();
+    await createInitialPosts();
+    // await createInitialTags(); // new
+  } catch (error) {
+    console.log("Error during rebuildDB")
+    throw error;
+  }
+}
+
+async function testDB() {
+  try {
+    console.log("Starting to test database...");
+
+    console.log("Calling getAllUsers");
+    const users = await getAllUsers();
+    console.log("Result:", users);
+
+    console.log("Calling updateUser on users[0]");
+    const updateUserResult = await updateUser(users[0].id, {
+      name: "Newname Sogood",
+      location: "Lesterville, KY"
+    });
+    console.log("Result:", updateUserResult);
+
+    console.log("Calling getAllPosts");
+    const posts = await getAllPosts();
+    console.log("Result:", posts);
+
+    console.log("Calling updatePost on posts[0]");
+    const updatePostResult = await updatePost(posts[0].id, {
+      title: "New Title",
+      content: "Updated Content"
+    });
+    console.log("Result:", updatePostResult);
+
+    console.log("Calling getUserById with 1");
+    const albert = await getUserById(1);
+    console.log("Result:", albert);
+
+
+    console.log("Finished database tests!");
+  } catch (error) {
+    console.log("Error during testDB");
+    throw error;
+  }
+}
+
 
 rebuildDB()
-    .then(testDB)
-    .catch(console.error)
-    .finally(() => client.end());
+  .then(testDB)
+  .catch(console.error)
+  .finally(() => client.end());
