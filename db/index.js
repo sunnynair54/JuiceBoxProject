@@ -174,16 +174,12 @@ async function getAllPosts() {
 
 async function getAllTags() {
   try {
-    const { rows: tagIds } = await client.query(`
-      SELECT * 
+    const { rows } = await client.query(`
+      SELECT *
       FROM tags;
     `);
 
-    const tags = await Promise.all(tagIds.map(
-      post => getPostById(tags.id)
-    ));
-
-    return tags;
+    return rows;
   } catch (error) {
     throw error;
   }
